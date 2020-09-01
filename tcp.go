@@ -7,10 +7,12 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/shadowsocks/go-shadowsocks2/socks"
+	"golang.org/x/net/proxy"
 )
 
 // Create a SOCKS server listening on addr and proxy to server.
@@ -93,7 +95,7 @@ func tcpLocal(addr, server string, shadow func(net.Conn) net.Conn, getAddr func(
 }
 
 // Listen on addr for incoming connections.
-func tcpRemote(addr string, shadow func(net.Conn) net.Conn) {
+func tcpRemote(addr string, proxyServer string, password string, shadow func(net.Conn) net.Conn) {
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		logf("failed to listen on %s: %v", addr, err)
@@ -127,7 +129,30 @@ func tcpRemote(addr string, shadow func(net.Conn) net.Conn) {
 				return
 			}
 
-			rc, err := net.Dial("tcp", tgt.String())
+			var rc net.Conn
+			if proxyServer != "" {
+				var auth proxy.Auth
+				if password != "" {
+					s := strings.Split(password, "-")
+					if len(s) == 2 {
+						auth.User = s[0]
+						auth.Password = s[1]
+					}
+				}
+
+				dailer, err := proxy.SOCKS5("tcp", proxyServer, nil, &net.Dialer{
+					Timeout:   60 * time.Second,
+					KeepAlive: 30 * time.Second,
+				})
+				if err != nil {
+					logf("cannot initialize socks5 proxy")
+					return
+				}
+				rc, err = dailer.Dial("tcp", tgt.String())
+			} else {
+				rc, err = net.Dial("tcp", tgt.String())
+			}
+
 			if err != nil {
 				logf("failed to connect to target: %v", err)
 				return

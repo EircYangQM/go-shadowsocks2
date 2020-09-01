@@ -43,6 +43,7 @@ func main() {
 		TCP        bool
 		Plugin     string
 		PluginOpts string
+		Proxy      string
 	}
 
 	flag.BoolVar(&config.Verbose, "verbose", false, "verbose mode")
@@ -62,6 +63,7 @@ func main() {
 	flag.StringVar(&flags.PluginOpts, "plugin-opts", "", "Set SIP003 plugin options. (e.g., \"server;tls;host=mydomain.me\")")
 	flag.BoolVar(&flags.UDP, "udp", false, "(server-only) enable UDP support")
 	flag.BoolVar(&flags.TCP, "tcp", true, "(server-only) enable TCP support")
+	flag.StringVar(&flags.Proxy, "proxy", "", "(server-only) the proxy which server use. For example, socks5://username:password@127.0.0.1:1081")
 	flag.BoolVar(&config.TCPCork, "tcpcork", false, "coalesce writing first few packets")
 	flag.DurationVar(&config.UDPTimeout, "udptimeout", 5*time.Minute, "UDP tunnel timeout")
 	flag.Parse()
@@ -149,6 +151,7 @@ func main() {
 		addr := flags.Server
 		cipher := flags.Cipher
 		password := flags.Password
+		proxy := flags.Proxy
 		var err error
 
 		if strings.HasPrefix(addr, "ss://") {
@@ -173,10 +176,10 @@ func main() {
 		}
 
 		if flags.UDP {
-			go udpRemote(udpAddr, ciph.PacketConn)
+			go udpRemote(udpAddr, proxy, password, ciph.PacketConn)
 		}
 		if flags.TCP {
-			go tcpRemote(addr, ciph.StreamConn)
+			go tcpRemote(addr, proxy, password, ciph.StreamConn)
 		}
 	}
 
