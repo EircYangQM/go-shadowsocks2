@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -95,7 +94,7 @@ func tcpLocal(addr, server string, shadow func(net.Conn) net.Conn, getAddr func(
 }
 
 // Listen on addr for incoming connections.
-func tcpRemote(addr string, proxyServer string, password string, shadow func(net.Conn) net.Conn) {
+func tcpRemote(addr string, proxyServer string, user string, password string, shadow func(net.Conn) net.Conn) {
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		logf("failed to listen on %s: %v", addr, err)
@@ -133,11 +132,8 @@ func tcpRemote(addr string, proxyServer string, password string, shadow func(net
 			if proxyServer != "" {
 				var auth proxy.Auth
 				if password != "" {
-					s := strings.Split(password, "-")
-					if len(s) == 2 {
-						auth.User = s[0]
-						auth.Password = s[1]
-					}
+					auth.User = user
+					auth.Password = password
 				}
 
 				dailer, err := proxy.SOCKS5("tcp", proxyServer, nil, &net.Dialer{

@@ -7,6 +7,7 @@ require (
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
 	golang.org/x/sys v0.0.0-20200824131525-c12d262b63d8 // indirect
+	gopkg.in/ini.v1 v1.60.2
 )
 
 replace (
