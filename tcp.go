@@ -136,7 +136,7 @@ func tcpRemote(addr string, proxyServer string, user string, password string, sh
 					auth.Password = password
 				}
 
-				dailer, err := proxy.SOCKS5("tcp", proxyServer, nil, &net.Dialer{
+				dailer, err := proxy.SOCKS5("tcp", proxyServer, &auth, &net.Dialer{
 					Timeout:   60 * time.Second,
 					KeepAlive: 30 * time.Second,
 				})
